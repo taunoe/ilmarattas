@@ -5,6 +5,19 @@
 #include "Unistep2.h"        // Stepper motor
 #include "Radar_MR24HPC1.h"  // Radar
 
+// If Raspberry Pi Pico
+#if defined Serial1
+  Radar_MR24HPC1 radar = Radar_MR24HPC1(&Serial1);
+#else
+// Arduino Nano
+  #include <SoftwareSerial.h>
+  // Choose any two pins that can be used with SoftwareSerial to RX & TX
+  #define RX_Pin A2
+  #define TX_Pin A3
+  SoftwareSerial mySerial = SoftwareSerial(RX_Pin, TX_Pin);
+  Radar_MR24HPC1 radar = Radar_MR24HPC1(&mySerial);
+#endif
+
 // Timing
 uint64_t prev_millis = 0;  // unsigned long
 #define RADAR_INTERVAL 400
@@ -25,19 +38,27 @@ Unistep2 stepper(IN1, IN2, IN3, IN4, STEPS_PER_REV, 1000);
 int step = 0;  // pos, neg or 0
 
 
-// RADAR
-Radar_MR24HPC1 radar = Radar_MR24HPC1(&Serial1);
-
-int heartbeat = 0;
+int counter = 0;
 
 void setup() {
   Serial.begin(115200);   // Serial print
-  Serial1.begin(115200);  // Radar
 
-  while (!Serial1) {
-    Serial.println("Radar disconnected");
-    delay(100);
-  }
+  // Radar
+  #if defined Serial1
+    Serial1.begin(115200);
+    while (!Serial1) {
+      Serial.println("Radar disconnected");
+      delay(100);
+    }
+  #else
+    mySerial.begin(115200);
+    while (!mySerial) {
+      Serial.println("Radar disconnected");
+      delay(100);
+    }
+  #endif
+
+  
   Serial.println("Radar ready");
 
   // radar.set_mode(SIMPLE);
@@ -49,22 +70,22 @@ void setup() {
 void loop() {
   uint64_t current_millis = millis();
 
+  stepper.run();
+  // radar.run(VERBAL);
+  radar.run(NONVERBAL);
+
   if ((current_millis - prev_millis) >= RADAR_INTERVAL) {
     ask_radar = true;
     prev_millis = current_millis;
   }
 
-
-  stepper.run();
   stepper.move(step);
-
-  //radar.run(VERBAL);
-  radar.run(NONVERBAL);
 
   if (ask_radar) {
     ask_radar = false;
 
-    Serial.print("Motion energi: ");
+    Serial.print(counter);
+    Serial.print(" energia: ");
     Serial.println(radar.get_motion_energy());
 
     if (radar.get_motion_energy() > 50) {
@@ -73,9 +94,9 @@ void loop() {
       step = 0;
     }
 
-
+    counter++;
   }
-}  // main loop end
+}
 
 void loop1() {
   // core2
