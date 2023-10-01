@@ -1,5 +1,7 @@
 /*
   Copyright 2023 Tauno Erik
+  main.cpp
+  "Ilmaratas"
 */
 #include <Arduino.h>
 #include "Unistep2.h"        // Stepper motor
@@ -7,38 +9,39 @@
 
 // If Raspberry Pi Pico
 #if defined Serial1
+  // TX GP0
+  // RX GP1
   Radar_MR24HPC1 radar = Radar_MR24HPC1(&Serial1);
 #else
 // Arduino Nano
   #include <SoftwareSerial.h>
   // Choose any two pins that can be used with SoftwareSerial to RX & TX
-  #define RX_Pin A2
-  #define TX_Pin A3
+  #define RX_Pin A3
+  #define TX_Pin A2
   SoftwareSerial mySerial = SoftwareSerial(RX_Pin, TX_Pin);
   Radar_MR24HPC1 radar = Radar_MR24HPC1(&mySerial);
 #endif
 
 // Timing
-uint64_t prev_millis = 0;  // unsigned long
-#define RADAR_INTERVAL 400
+uint64_t prev_millis = 0;
+const int RADAR_INTERVAL =  400;  // ms
 bool ask_radar = false;
 
 // STEPPER MOTOR
-// pins
-const int IN1 = 2;
-const int IN2 = 3;
-const int IN3 = 4;
-const int IN4 = 5;
+const int IN1_Pin = 5;  // 2;
+const int IN2_Pin = 4;  // 3;
+const int IN3_Pin = 3;  // 4;
+const int IN4_Pin = 2;  // 5;
 
 const int STEPS_PER_REV = 4096;
 
 // Pins for IN1, IN2, IN3, IN4, steps per rev, step delay(in micros)
-Unistep2 stepper(IN1, IN2, IN3, IN4, STEPS_PER_REV, 1000);
-
+Unistep2 stepper(IN1_Pin, IN2_Pin, IN3_Pin, IN4_Pin, STEPS_PER_REV, 900);
 int step = 0;  // pos, neg or 0
 
-
+// Radar
 int counter = 0;
+const int ENERGY_THRESHOLD = 50;
 
 void setup() {
   Serial.begin(115200);   // Serial print
@@ -58,7 +61,6 @@ void setup() {
     }
   #endif
 
-  
   Serial.println("Radar ready");
 
   // radar.set_mode(SIMPLE);
@@ -84,16 +86,17 @@ void loop() {
   if (ask_radar) {
     ask_radar = false;
 
-    Serial.print(counter);
-    Serial.print(" energia: ");
-    Serial.println(radar.get_motion_energy());
+    // Serial.print(counter);
+    Serial.print("motion");
+    Serial.print(radar.get_motion_energy());
+    Serial.print("static");
+    Serial.println(radar.get_static_energy());
 
-    if (radar.get_motion_energy() > 50) {
-      step = 1;
+    if (radar.get_motion_energy() > ENERGY_THRESHOLD) {
+      step = 1;  // move
     } else {
       step = 0;
     }
-
     counter++;
   }
 }
