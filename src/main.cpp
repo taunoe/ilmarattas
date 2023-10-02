@@ -88,12 +88,16 @@ void loop() {
 
     // Serial.print(counter);
     Serial.print("motion");
-    Serial.print(radar.get_motion_energy());
+    int motion_energy = radar.get_motion_energy();
+    Serial.print(motion_energy);
     Serial.print("static");
-    Serial.println(radar.get_static_energy());
+    int static_energy = radar.get_static_energy();
+    Serial.println(static_energy);
 
-    if (radar.get_motion_energy() > ENERGY_THRESHOLD) {
-      step = 1;  // move
+    if (static_energy > 120) {
+      if (motion_energy < 20) {
+        step = 1;  // move
+      }
     } else {
       step = 0;
     }
