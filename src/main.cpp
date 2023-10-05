@@ -1,7 +1,7 @@
 /*
   Copyright 2023 Tauno Erik
   main.cpp
-  "Ilmaratas"
+  "Ilmaratas" -meditatsioono masin!
 */
 #include <Arduino.h>
 #include "Unistep2.h"        // Stepper motor
@@ -28,10 +28,10 @@ const int RADAR_INTERVAL =  400;  // ms
 bool ask_radar = false;
 
 // STEPPER MOTOR
-const int IN1_Pin = 5;  // 2;
-const int IN2_Pin = 4;  // 3;
-const int IN3_Pin = 3;  // 4;
-const int IN4_Pin = 2;  // 5;
+const int IN1_Pin = 5;
+const int IN2_Pin = 4;
+const int IN3_Pin = 3;
+const int IN4_Pin = 2;
 
 const int STEPS_PER_REV = 4096;
 
@@ -41,7 +41,8 @@ int step = 0;  // pos, neg or 0
 
 // Radar
 int counter = 0;
-const int ENERGY_THRESHOLD = 50;
+const int MOTION_THRESHOLD = 20;
+const int STATIC_THRESHOLD = 140;
 
 void setup() {
   Serial.begin(115200);   // Serial print
@@ -86,18 +87,18 @@ void loop() {
   if (ask_radar) {
     ask_radar = false;
 
+    int motion_energy = radar.get_motion_energy();
+    int static_energy = radar.get_static_energy();
     // Serial.print(counter);
     Serial.print("motion");
-    int motion_energy = radar.get_motion_energy();
     Serial.print(motion_energy);
     Serial.print("static");
-    int static_energy = radar.get_static_energy();
-    Serial.println(static_energy);
+    Serial.print(static_energy);
+    Serial.println();
 
-    if (static_energy > 120) {
-      if (motion_energy < 20) {
-        step = 1;  // move
-      }
+    if (static_energy > STATIC_THRESHOLD && 
+        motion_energy < MOTION_THRESHOLD) {
+      step = 1;  // move
     } else {
       step = 0;
     }
