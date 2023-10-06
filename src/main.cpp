@@ -89,13 +89,21 @@ void loop() {
 
     int motion_energy = radar.get_motion_energy();
     int static_energy = radar.get_static_energy();
+    int static_distance = radar.get_static_distance();
+    int motion_distance = radar.get_motion_distance();
+
     // Serial.print(counter);
-    Serial.print("motion");
+    Serial.print("motion ");
     Serial.print(motion_energy);
-    Serial.print("static");
+    Serial.print(" distance ");
+    Serial.print(motion_distance);
+    Serial.print(" static ");
     Serial.print(static_energy);
+    Serial.print(" distance ");
+    Serial.print(static_distance);
     Serial.println();
 
+    // TODO: kaugus!
     if (static_energy > STATIC_THRESHOLD && 
         motion_energy < MOTION_THRESHOLD) {
       step = 1;  // move
