@@ -40,9 +40,9 @@ Unistep2 stepper(IN1_Pin, IN2_Pin, IN3_Pin, IN4_Pin, STEPS_PER_REV, 900);
 int step = 0;  // pos, neg or 0
 
 // Radar
-int counter = 0;
-const int MOTION_THRESHOLD = 20;
-const int STATIC_THRESHOLD = 140;
+const int MOTION_ENERGY_THRESHOLD = 20;
+const int STATIC_ENERGY_THRESHOLD = 140;
+const int STATIC_DISTANSE_THRESHOLD = 150;
 
 void setup() {
   Serial.begin(115200);   // Serial print
@@ -97,20 +97,22 @@ void loop() {
     Serial.print(motion_energy);
     Serial.print(" distance ");
     Serial.print(motion_distance);
-    Serial.print(" static ");
+    Serial.print("; static ");
     Serial.print(static_energy);
     Serial.print(" distance ");
     Serial.print(static_distance);
     Serial.println();
 
     // TODO: kaugus!
-    if (static_energy > STATIC_THRESHOLD && 
-        motion_energy < MOTION_THRESHOLD) {
-      step = 1;  // move
+    if (static_energy > STATIC_ENERGY_THRESHOLD) {
+      if (motion_energy < MOTION_ENERGY_THRESHOLD) {
+        if (static_distance <= STATIC_DISTANSE_THRESHOLD) {
+          step = 1;  // move
+        }
+      }
     } else {
       step = 0;
     }
-    counter++;
   }
 }
 
