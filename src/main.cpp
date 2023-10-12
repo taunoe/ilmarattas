@@ -24,8 +24,14 @@
 
 // Timing
 uint64_t prev_millis = 0;
-const int RADAR_INTERVAL =  400;  // ms
 bool ask_radar = false;
+
+// Radar
+const int ASK_INTERVAL = 30000;
+const int RADAR_INTERVAL =  300;  // ms
+const int MOTION_ENERGY_THRESHOLD = 15;
+const int STATIC_ENERGY_THRESHOLD = 121;
+const int STATIC_DISTANSE_THRESHOLD = 200; // cm
 
 // STEPPER MOTOR
 const int IN1_Pin = 5;
@@ -38,11 +44,6 @@ const int STEPS_PER_REV = 4096;
 // Pins for IN1, IN2, IN3, IN4, steps per rev, step delay(in micros)
 Unistep2 stepper(IN1_Pin, IN2_Pin, IN3_Pin, IN4_Pin, STEPS_PER_REV, 900);
 int step = 0;  // pos, neg or 0
-
-// Radar
-const int MOTION_ENERGY_THRESHOLD = 15;
-const int STATIC_ENERGY_THRESHOLD = 130;
-const int STATIC_DISTANSE_THRESHOLD = 150;
 
 void setup() {
   Serial.begin(115200);   // Serial print
@@ -90,25 +91,26 @@ void loop() {
     int motion_energy = radar.get_motion_energy();
     int static_energy = radar.get_static_energy();
     int static_distance = radar.get_static_distance();
-    // int motion_distance = radar.get_motion_distance();
+    int motion_distance = radar.get_motion_distance();
 
     // Serial.print(counter);
-    Serial.print("m ");
+    Serial.print("Liikuv ");
     Serial.print(motion_energy);
-    // Serial.print(" d ");
-    // Serial.print(motion_distance);
-    Serial.print("; s ");
+    Serial.print(" \td: ");
+    Serial.print(motion_distance);
+    Serial.print("cm\t\tSeisev ");
     Serial.print(static_energy);
-    Serial.print(" d ");
+    Serial.print(" \td: ");
     Serial.print(static_distance);
+    Serial.print("cm");
     Serial.println();
 
     // TODO: kaugus!
     if (static_energy > STATIC_ENERGY_THRESHOLD) {
       if (motion_energy < MOTION_ENERGY_THRESHOLD) {
-        //if (static_distance <= STATIC_DISTANSE_THRESHOLD) {
+        if (static_distance <= STATIC_DISTANSE_THRESHOLD) {
           step = 1;  // move
-       // }
+        }
       }
     } else {
       step = 0;
